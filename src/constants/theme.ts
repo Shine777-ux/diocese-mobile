@@ -1,26 +1,19 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
-
-
 import { Platform } from 'react-native';
 
 export const Colors = {
   light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
+    text: '#f8fafc',
+    background: '#181f2a',
+    backgroundElement: '#1e2533',
+    backgroundSelected: '#252f40',
+    textSecondary: '#94a3b8',
   },
   dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
+    text: '#f8fafc',
+    background: '#181f2a',
+    backgroundElement: '#1e2533',
+    backgroundSelected: '#252f40',
+    textSecondary: '#94a3b8',
   },
 } as const;
 
@@ -28,13 +21,9 @@ export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
     sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
     serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
     rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
     mono: 'ui-monospace',
   },
   default: {
@@ -64,30 +53,40 @@ export const Spacing = {
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
 export const MaxContentWidth = 800;
 
+// 1st Colour Combination:
+// Canvas: #181f2a (Deep Slate-Navy)
+// Surfaces / Cards: #1e2533 (Rich Surface)
+// Accents: #38bdf8 (Cyan Highlight) / #3b82f6 (Slate Blue)
+// Borders: rgba(255, 255, 255, 0.08)
 export const COLORS = {
-  primary: '#5E2BFF', // Deep vibrant Indigo/Purple
-  primaryLight: '#8A58FF',
-  primaryDark: '#3A14B8',
+  primary: '#38bdf8', // Cyan highlight from 1st combination
+  primaryLight: '#7dd3fc',
+  primaryDark: '#0284c7',
   
-  secondary: '#FFB800', // Premium Gold/Amber
-  accent: '#00F0FF', // Cyan accent
+  secondary: '#3b82f6', // Slate blue
+  accent: '#38bdf8', // Cyan accent
   
-  background: '#F4F5F9', // Premium light off-white
-  surface: '#FFFFFF',
-  surfaceLight: 'rgba(255, 255, 255, 0.7)', // For glassmorphism
+  background: '#181f2a', // 1st combination deep navy-slate canvas
+  surface: '#1e2533',    // 1st combination rich surface / cards / paper
+  surfaceLight: 'rgba(30, 37, 51, 0.85)',
   
-  text: '#1F2937', // Deep gray
-  textLight: '#9CA3AF', 
+  text: '#f8fafc',       // Bright crisp text for dark
+  textLight: '#94a3b8',  // Muted secondary text
+  textWhite: '#ffffff',
   
-  border: '#E5E7EB',
-  error: '#FF4C4C',
-  success: '#10B981',
+  border: 'rgba(255, 255, 255, 0.08)',
+  error: '#f87171',
+  success: '#34d399',
 };
 
 export const GRADIENTS = {
-  primary: ['#5E2BFF', '#8A58FF'],
-  secondary: ['#FFB800', '#FFD15C'],
-  background: ['#F4F5F9', '#E5E7EB'],
+  primary: ['#1e2533', '#181f2a'],
+  secondary: ['#38bdf8', '#0284c7'],
+  background: ['#181f2a', '#181f2a'],
+  card1: ['#1e2533', '#181f2a'],
+  card2: ['#1e2533', '#181f2a'],
+  card3: ['#1e2533', '#181f2a'],
+  card4: ['#1e2533', '#181f2a'],
 };
 
 export const SIZES = {
@@ -108,24 +107,24 @@ export const SIZES = {
 
 export const SHADOWS = {
   small: {
-    shadowColor: COLORS.primaryDark,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
     elevation: 3,
   },
   medium: {
-    shadowColor: COLORS.primaryDark,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-    elevation: 8,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 6,
   },
   large: {
-    shadowColor: COLORS.primaryDark,
-    shadowOffset: { width: 0, height: 20 },
-    shadowOpacity: 0.12,
-    shadowRadius: 30,
-    elevation: 15,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 10,
   }
 };

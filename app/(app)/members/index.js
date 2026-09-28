@@ -49,41 +49,53 @@ export default function MembersScreen() {
   const renderItem = ({ item }) => (
     <TouchableOpacity 
       style={styles.card}
+      activeOpacity={0.7}
       onPress={() => router.push(`/(app)/members/${item.id}`)}
     >
       <View style={styles.iconContainer}>
-        <MaterialIcons name="person" size={24} color={COLORS.primary} />
+        <MaterialIcons name="person" size={22} color={COLORS.primary} />
       </View>
       <View style={styles.cardContent}>
         <Text style={styles.cardTitle}>{item.first_name} {item.last_name}</Text>
         <View style={styles.metaRow}>
-          <Text style={styles.badgeText}>{item.role || 'Laity'}</Text>
+          <Text style={styles.badgeText}>{item.role || 'Parishioner'}</Text>
           {item.parish_name ? (
             <Text style={styles.parishText} numberOfLines={1}>• {item.parish_name}</Text>
           ) : null}
         </View>
       </View>
-      <MaterialIcons name="chevron-right" size={24} color={COLORS.textLight} />
+      <MaterialIcons name="chevron-right" size={22} color={COLORS.textLight} />
     </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
+      {/* Streamlined Single-Line Search & Export Toolbar */}
       <View style={styles.topBar}>
         <View style={styles.searchContainer}>
-          <MaterialIcons name="search" size={22} color={COLORS.textLight} />
+          <MaterialIcons name="search" size={20} color={COLORS.textLight} />
           <TextInput 
             style={styles.searchInput} 
             placeholder="Search parishioners..." 
+            placeholderTextColor={COLORS.textLight} 
             value={search}
             onChangeText={setSearch}
             onSubmitEditing={handleSearch}
             returnKeyType="search"
           />
+          {search ? (
+            <TouchableOpacity onPress={() => { setSearch(''); fetchMembers(''); }}>
+              <MaterialIcons name="close" size={18} color={COLORS.textLight} />
+            </TouchableOpacity>
+          ) : null}
         </View>
         <TouchableOpacity style={styles.exportBtn} onPress={() => handleExport('excel')}>
-          <MaterialIcons name="file-download" size={20} color={COLORS.surface} />
+          <MaterialIcons name="file-download" size={16} color="#ffffff" />
           <Text style={styles.exportBtnText}>Excel</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.exportBtn, { marginLeft: 6, backgroundColor: COLORS.secondary }]} onPress={() => handleExport('csv')}>
+          <MaterialIcons name="file-download" size={16} color="#ffffff" />
+          <Text style={styles.exportBtnText}>CSV</Text>
         </TouchableOpacity>
       </View>
 
@@ -98,7 +110,7 @@ export default function MembersScreen() {
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
-            <Text style={styles.emptyText}>No Members Found within your scope</Text>
+            <Text style={styles.emptyText}>No Parishioners Found</Text>
           }
         />
       )}
@@ -119,8 +131,8 @@ const styles = StyleSheet.create({
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 12,
+    paddingHorizontal: 12,
+    paddingTop: 10,
     paddingBottom: 6,
   },
   searchContainer: {
@@ -128,62 +140,67 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.surface,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    height: 46,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    height: 42,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     ...SHADOWS.small,
   },
   searchInput: {
     flex: 1,
-    marginLeft: 8,
-    fontSize: SIZES.md,
+    marginLeft: 6,
+    fontSize: SIZES.sm,
+    color: COLORS.text,
   },
   exportBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 12,
-    marginLeft: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+    borderRadius: 10,
+    marginLeft: 8,
     ...SHADOWS.small,
   },
   exportBtnText: {
-    color: COLORS.surface,
+    color: '#ffffff',
     fontWeight: '700',
-    fontSize: SIZES.xs,
-    marginLeft: 4,
+    fontSize: 11,
+    marginLeft: 3,
   },
   listContent: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 20,
+    paddingHorizontal: 12,
+    paddingTop: 6,
+    paddingBottom: 24,
   },
   card: {
     backgroundColor: COLORS.surface,
-    padding: 14,
+    padding: 12,
     borderRadius: 12,
-    marginBottom: 10,
+    marginBottom: 8,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: COLORS.border,
     ...SHADOWS.small,
   },
   iconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: COLORS.primary + '15',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(56, 189, 248, 0.12)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 14,
+    marginRight: 12,
   },
   cardContent: {
     flex: 1,
   },
   cardTitle: {
-    fontSize: SIZES.md,
-    fontWeight: 'bold',
+    fontSize: SIZES.sm,
+    fontWeight: '700',
     color: COLORS.text,
     marginBottom: 2,
   },
@@ -192,19 +209,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   badgeText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
     color: COLORS.primary,
   },
   parishText: {
-    fontSize: 11,
+    fontSize: 10,
     color: COLORS.textLight,
-    marginLeft: 6,
+    marginLeft: 4,
     flex: 1,
   },
   emptyText: {
     textAlign: 'center',
     marginTop: 30,
     color: COLORS.textLight,
+    fontSize: SIZES.sm,
   },
 });

@@ -4,8 +4,6 @@ import { useAuth } from '../../src/context/AuthContext';
 import { COLORS, SIZES, SHADOWS, GRADIENTS } from '../../src/constants/theme';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
-import { FadeInDown, FadeInUp } from '../../src/components/FadeInView';
 
 export default function LoginScreen() {
   const [username, setUsername] = useState('');
@@ -37,67 +35,60 @@ export default function LoginScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <LinearGradient
-        colors={GRADIENTS.primary}
-        style={styles.background}
-      />
-      
       <View style={styles.contentContainer}>
-        <FadeInDown duration={800} style={styles.header}>
+        <View style={styles.header}>
           <View style={styles.iconWrapper}>
-            <MaterialIcons name="account-balance" size={56} color={COLORS.primary} />
+            <MaterialIcons name="account-balance" size={44} color={COLORS.primary} />
           </View>
           <Text style={styles.title}>Diocese ERP</Text>
-          <Text style={styles.subtitle}>Sign in to access your portal</Text>
-        </FadeInDown>
+          <Text style={styles.subtitle}>Sign in to access Chancery & Parish Portal</Text>
+        </View>
 
-        <FadeInUp duration={800} delay={200} style={styles.formWrapper}>
-          <BlurView intensity={80} tint="light" style={styles.blurContainer}>
-            {errorMsg ? (
-              <View style={styles.errorContainer}>
-                <MaterialIcons name="error-outline" size={20} color={COLORS.error} />
-                <Text style={styles.errorText}>{errorMsg}</Text>
-              </View>
-            ) : null}
-
-            <View style={styles.inputContainer}>
-              <MaterialIcons name="person-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Username"
-                placeholderTextColor={COLORS.textLight}
-                value={username}
-                onChangeText={setUsername}
-                autoCapitalize="none"
-              />
+        <View style={styles.card}>
+          {errorMsg ? (
+            <View style={styles.errorContainer}>
+              <MaterialIcons name="error-outline" size={18} color={COLORS.error} />
+              <Text style={styles.errorText}>{errorMsg}</Text>
             </View>
+          ) : null}
 
-            <View style={styles.inputContainer}>
-              <MaterialIcons name="lock-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Password"
-                placeholderTextColor={COLORS.textLight}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-              />
-            </View>
+          <View style={styles.inputContainer}>
+            <MaterialIcons name="person-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Username"
+              placeholderTextColor={COLORS.textLight}
+              value={username}
+              onChangeText={setUsername}
+              autoCapitalize="none"
+            />
+          </View>
 
-            <TouchableOpacity 
-              style={styles.loginButton} 
-              onPress={handleLogin}
-              disabled={loading}
-              activeOpacity={0.8}
-            >
-              {loading ? (
-                <ActivityIndicator color={COLORS.surface} />
-              ) : (
-                <Text style={styles.loginButtonText}>Sign In</Text>
-              )}
-            </TouchableOpacity>
-          </BlurView>
-        </FadeInUp>
+          <View style={styles.inputContainer}>
+            <MaterialIcons name="lock-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              placeholderTextColor={COLORS.textLight}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+            />
+          </View>
+
+          <TouchableOpacity 
+            style={styles.loginButton} 
+            onPress={handleLogin}
+            disabled={loading}
+            activeOpacity={0.8}
+          >
+            {loading ? (
+              <ActivityIndicator color="#0f172a" />
+            ) : (
+              <Text style={styles.loginButtonText}>Sign In</Text>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
     </KeyboardAvoidingView>
   );
@@ -106,9 +97,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  background: {
-    ...StyleSheet.absoluteFillObject,
+    backgroundColor: COLORS.background,
   },
   contentContainer: {
     flex: 1,
@@ -117,90 +106,90 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 32,
   },
   iconWrapper: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
+    width: 80,
+    height: 80,
+    borderRadius: 20,
     backgroundColor: COLORS.surface,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
-    ...SHADOWS.large,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    ...SHADOWS.medium,
   },
   title: {
-    fontSize: SIZES.xxxl,
+    fontSize: SIZES.xxl,
     fontWeight: '800',
-    color: COLORS.surface,
-    marginBottom: 8,
+    color: '#ffffff',
+    marginBottom: 6,
     letterSpacing: 0.5,
   },
   subtitle: {
-    fontSize: SIZES.md,
-    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: SIZES.xs,
+    color: COLORS.textLight,
     fontWeight: '500',
+    textAlign: 'center',
   },
-  formWrapper: {
-    borderRadius: SIZES.radius.lg,
-    overflow: 'hidden',
+  card: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     ...SHADOWS.medium,
-  },
-  blurContainer: {
-    padding: 32,
-    backgroundColor: COLORS.surfaceLight,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
-    borderRadius: SIZES.radius.md,
-    marginBottom: 16,
-    paddingHorizontal: 16,
-    height: 56,
+    backgroundColor: COLORS.background,
+    borderRadius: 10,
+    marginBottom: 14,
+    paddingHorizontal: 14,
+    height: 50,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.5)',
-    ...SHADOWS.small,
+    borderColor: COLORS.border,
   },
   inputIcon: {
-    marginRight: 12,
+    marginRight: 10,
   },
   input: {
     flex: 1,
     height: '100%',
-    fontSize: SIZES.md,
+    fontSize: SIZES.sm,
     color: COLORS.text,
-    fontWeight: '500',
   },
   loginButton: {
     backgroundColor: COLORS.primary,
-    height: 56,
-    borderRadius: SIZES.radius.md,
+    height: 50,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 16,
-    ...SHADOWS.medium,
+    marginTop: 10,
+    ...SHADOWS.small,
   },
   loginButtonText: {
-    color: COLORS.surface,
-    fontSize: SIZES.lg,
-    fontWeight: 'bold',
+    color: '#0f172a',
+    fontSize: SIZES.md,
+    fontWeight: '700',
     letterSpacing: 0.5,
   },
   errorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEE2E2',
-    padding: 12,
-    borderRadius: SIZES.radius.sm,
-    marginBottom: 16,
-    borderLeftWidth: 4,
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 14,
+    borderLeftWidth: 3,
     borderLeftColor: COLORS.error,
   },
   errorText: {
     color: COLORS.error,
-    marginLeft: 8,
-    fontSize: SIZES.sm,
+    marginLeft: 6,
+    fontSize: 11,
     fontWeight: '600',
   }
 });

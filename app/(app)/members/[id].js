@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
-import * as WebBrowser from 'expo-web-browser';
-import * as SecureStore from 'expo-secure-store';
-import apiClient, { BASE_URL } from '../../../src/api/client';
+import apiClient from '../../../src/api/client';
 import { COLORS, SIZES, SHADOWS } from '../../../src/constants/theme';
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function MemberDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -23,23 +22,9 @@ export default function MemberDetailScreen() {
         setLoading(false);
       }
     };
-    
-    if (id) {
-      fetchMember();
-    }
-  }, [id]);
 
-  const handleDownloadCertificate = async (certType) => {
-    try {
-      const token = await SecureStore.getItemAsync('userToken');
-      const url = `${BASE_URL}/api/members/${id}/certificate/${certType}`;
-      await WebBrowser.openBrowserAsync(url, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      });
-    } catch (e) {
-      Alert.alert('Certificate', 'Opening certificate PDF...');
-    }
-  };
+    if (id) fetchMember();
+  }, [id]);
 
   if (loading) {
     return (
@@ -52,86 +37,75 @@ export default function MemberDetailScreen() {
   if (!member) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.emptyText}>Member not found or outside your authorized parish scope.</Text>
+        <Text style={styles.emptyText}>Member not found</Text>
       </View>
     );
   }
 
-  const SacramentItem = ({ title, received, date, certType }) => (
-    <View style={styles.sacramentItem}>
-      <View style={styles.sacramentLeft}>
-        <MaterialIcons 
-          name={received ? "check-circle" : "radio-button-unchecked"} 
-          size={22} 
-          color={received ? COLORS.success : COLORS.textLight} 
-        />
-        <View style={styles.sacramentTextContainer}>
-          <Text style={styles.sacramentTitle}>{title}</Text>
-          <Text style={styles.sacramentDate}>{received ? (date || 'Date not recorded') : 'Not Received'}</Text>
-        </View>
-      </View>
-      {received ? (
-        <TouchableOpacity 
-          style={styles.certBtn} 
-          onPress={() => handleDownloadCertificate(certType)}
-        >
-          <MaterialIcons name="print" size={16} color={COLORS.primary} />
-          <Text style={styles.certBtnText}>Certificate</Text>
-        </TouchableOpacity>
-      ) : null}
-    </View>
-  );
-
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.headerCard}>
+      <LinearGradient colors={['#1e293b', '#0f172a']} style={styles.headerCard}>
         <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
-            {(member.first_name?.[0] || '') + (member.last_name?.[0] || '')}
-          </Text>
+          <MaterialIcons name="person" size={48} color={COLORS.primary} />
         </View>
-        <Text style={styles.title}>{member.first_name} {member.last_name}</Text>
-        <Text style={styles.roleBadge}>{member.role || 'Laity'}</Text>
-        
-        {member.parish_name ? (
-          <View style={styles.headerChip}>
-            <MaterialIcons name="church" size={14} color={COLORS.surface} style={{ marginRight: 4 }} />
-            <Text style={styles.headerChipText}>{member.parish_name}</Text>
-          </View>
-        ) : null}
-
-        <Text style={styles.detailText}>{member.phone || 'No Phone'}</Text>
-        <Text style={styles.detailText}>{member.email || 'No Email'}</Text>
-        <Text style={styles.detailText}>DOB: {member.dob || 'Unknown'}</Text>
-      </View>
+        <Text style={styles.name}>{member.first_name} {member.last_name}</Text>
+        <View style={styles.roleTag}>
+          <Text style={styles.roleText}>{member.role || 'Parishioner'}</Text>
+        </View>
+      </LinearGradient>
 
       <View style={styles.content}>
-        <View style={styles.card}>
-          <Text style={styles.cardHeader}>Sacramental Records & Certificates</Text>
-          <SacramentItem 
-            title="Holy Baptism" 
-            received={member.baptism_received} 
-            date={member.baptism_date}
-            certType="baptism" 
-          />
-          <SacramentItem 
-            title="First Holy Communion" 
-            received={member.communion_received} 
-            date={member.communion_date}
-            certType="communion" 
-          />
-          <SacramentItem 
-            title="Confirmation" 
-            received={member.confirmation_received} 
-            date={member.confirmation_date}
-            certType="confirmation" 
-          />
-          <SacramentItem 
-            title="Holy Matrimony" 
-            received={member.marriage_received} 
-            date={member.marriage_date}
-            certType="marriage" 
-          />
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>General Information</Text>
+          <View style={styles.infoRow}>
+            <MaterialIcons name="church" size={18} color={COLORS.primary} />
+            <Text style={styles.infoLabel}>Parish:</Text>
+            <Text style={styles.infoValue}>{member.parish_name || 'N/A'}</Text>
+          </View>
+          <View style={styles.infoRow}>
+            <MaterialIcons name="phone" size={18} color={COLORS.primary} />
+            <Text style={styles.infoLabel}>Phone:</Text>
+            <Text style={styles.infoValue}>{member.phone || 'N/A'}</Text>
+          </View>
+          <View style={styles.infoRow}>
+            <MaterialIcons name="email" size={18} color={COLORS.primary} />
+            <Text style={styles.infoLabel}>Email:</Text>
+            <Text style={styles.infoValue}>{member.email || 'N/A'}</Text>
+          </View>
+          <View style={styles.infoRow}>
+            <MaterialIcons name="cake" size={18} color={COLORS.primary} />
+            <Text style={styles.infoLabel}>Date of Birth:</Text>
+            <Text style={styles.infoValue}>{member.dob || 'N/A'}</Text>
+          </View>
+          <View style={styles.infoRow}>
+            <MaterialIcons name="wc" size={18} color={COLORS.primary} />
+            <Text style={styles.infoLabel}>Gender:</Text>
+            <Text style={styles.infoValue}>{member.gender || 'N/A'}</Text>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Sacramental Records</Text>
+          <View style={styles.infoRow}>
+            <MaterialIcons name="water-drop" size={18} color={COLORS.primary} />
+            <Text style={styles.infoLabel}>Baptism:</Text>
+            <Text style={styles.infoValue}>{member.baptism_date || 'Registered'}</Text>
+          </View>
+          <View style={styles.infoRow}>
+            <MaterialIcons name="local-florist" size={18} color={COLORS.primary} />
+            <Text style={styles.infoLabel}>Holy Communion:</Text>
+            <Text style={styles.infoValue}>{member.first_communion_date || 'Completed'}</Text>
+          </View>
+          <View style={styles.infoRow}>
+            <MaterialIcons name="verified" size={18} color={COLORS.primary} />
+            <Text style={styles.infoLabel}>Confirmation:</Text>
+            <Text style={styles.infoValue}>{member.confirmation_date || 'Completed'}</Text>
+          </View>
+          <View style={styles.infoRow}>
+            <MaterialIcons name="favorite" size={18} color={COLORS.primary} />
+            <Text style={styles.infoLabel}>Marriage:</Text>
+            <Text style={styles.infoValue}>{member.marriage_date || 'N/A'}</Text>
+          </View>
         </View>
       </View>
     </ScrollView>
@@ -148,125 +122,82 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: COLORS.background,
-    padding: 20,
   },
   headerCard: {
-    backgroundColor: COLORS.primary,
     padding: 24,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    ...SHADOWS.medium,
+    paddingTop: 36,
     alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
   },
   avatar: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: COLORS.surface,
+    backgroundColor: 'rgba(56, 189, 248, 0.12)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
+    borderWidth: 2,
+    borderColor: 'rgba(56, 189, 248, 0.3)',
   },
-  avatarText: {
-    fontSize: SIZES.xxl,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-  },
-  title: {
+  name: {
     fontSize: SIZES.xl,
     fontWeight: 'bold',
-    color: COLORS.surface,
-    marginBottom: 6,
+    color: '#ffffff',
+    marginBottom: 4,
   },
-  roleBadge: {
-    backgroundColor: COLORS.accent,
-    color: COLORS.surface,
-    paddingHorizontal: 12,
-    paddingVertical: 3,
-    borderRadius: 12,
-    overflow: 'hidden',
-    fontWeight: 'bold',
-    fontSize: 12,
-    marginBottom: 8,
-  },
-  headerChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+  roleTag: {
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
     paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
-    marginBottom: 10,
+    paddingVertical: 3,
+    borderRadius: 8,
   },
-  headerChipText: {
-    color: COLORS.surface,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  detailText: {
-    color: COLORS.surface,
-    opacity: 0.9,
-    fontSize: SIZES.sm,
-    marginBottom: 2,
+  roleText: {
+    color: COLORS.primary,
+    fontSize: 11,
+    fontWeight: '700',
   },
   content: {
     padding: 16,
   },
-  card: {
+  section: {
     backgroundColor: COLORS.surface,
     padding: 16,
-    borderRadius: 16,
+    borderRadius: 12,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     ...SHADOWS.small,
   },
-  cardHeader: {
-    fontSize: SIZES.md,
-    fontWeight: 'bold',
-    color: COLORS.text,
-    marginBottom: 16,
-  },
-  sacramentItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  sacramentLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  sacramentTextContainer: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  sacramentTitle: {
-    fontSize: SIZES.md,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
-  sacramentDate: {
-    fontSize: 12,
-    color: COLORS.textLight,
-    marginTop: 2,
-  },
-  certBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.primary + '15',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  certBtnText: {
-    fontSize: 11,
+  sectionTitle: {
+    fontSize: SIZES.sm,
     fontWeight: '700',
     color: COLORS.primary,
-    marginLeft: 4,
+    marginBottom: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 7,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.04)',
+  },
+  infoLabel: {
+    fontSize: SIZES.xs,
+    color: COLORS.textLight,
+    marginLeft: 8,
+    width: 105,
+  },
+  infoValue: {
+    fontSize: SIZES.xs,
+    color: COLORS.text,
+    flex: 1,
+    fontWeight: '500',
   },
   emptyText: {
-    textAlign: 'center',
     color: COLORS.textLight,
     fontSize: SIZES.md,
   }

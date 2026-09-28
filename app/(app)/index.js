@@ -5,26 +5,28 @@ import { COLORS, SIZES, SHADOWS, GRADIENTS } from '../../src/constants/theme';
 import apiClient from '../../src/api/client';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { FadeInUp, FadeInRight } from '../../src/components/FadeInView';
 
 export default function DashboardScreen() {
   const { user, logout } = useAuth();
   const [stats, setStats] = useState(null);
   const [events, setEvents] = useState([]);
   const [circulars, setCirculars] = useState([]);
+  const [programs, setPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchDashboardData = async () => {
     try {
-      const [statsRes, eventsRes, circularsRes] = await Promise.all([
+      const [statsRes, eventsRes, circularsRes, programsRes] = await Promise.all([
         apiClient.get('/api/stats').catch(() => ({ data: null })),
         apiClient.get('/api/events').catch(() => ({ data: [] })),
-        apiClient.get('/api/circulars').catch(() => ({ data: [] }))
+        apiClient.get('/api/circulars').catch(() => ({ data: [] })),
+        apiClient.get('/api/programs').catch(() => ({ data: [] }))
       ]);
       setStats(statsRes?.data);
       setEvents(eventsRes?.data || []);
       setCirculars(circularsRes?.data || []);
+      setPrograms(programsRes?.data || []);
     } catch (error) {
       console.error('Failed to fetch dashboard data', error);
     } finally {
@@ -42,120 +44,146 @@ export default function DashboardScreen() {
     fetchDashboardData();
   };
 
-  // Safe stat count extraction
   const getCount = (key) => {
-    if (!stats) return '...';
-    if (stats.counts && stats.counts[key] !== undefined) return stats.counts[key];
-    if (stats[key] !== undefined) return stats[key];
+    if (!stats) return '0';
+    if (stats.counts && stats.counts[key] !== undefined) return String(stats.counts[key]);
+    if (stats[key] !== undefined) return String(stats[key]);
     return '0';
   };
 
   const getScopeDescription = () => {
-    const role = (user?.role || '').toLowerCase();
-    if (['admin', 'administrator'].includes(role)) return 'Diocese Administrator';
-    if (role === 'bishop') return 'Diocese Bishop';
-    if (role === 'dean') return `Dean (Deanery #${user?.deanery_id || 'Assigned'})`;
-    return `${user?.role || 'Parishioner'} (Parish #${user?.parish_id || 'Assigned'})`;
+    if (!user) return '';
+    const role = (user.role || 'user').toUpperCase();
+    if (user.diocese_name) return `${role} • ${user.diocese_name}`;
+    if (user.parish_name) return `${role} • ${user.parish_name}`;
+    return role;
   };
 
-  const StatCard = ({ title, value, icon, gradient, index }) => (
-    <FadeInRight delay={index * 80} duration={500} style={styles.cardWrapper}>
-      <TouchableOpacity activeOpacity={0.85}>
-        <LinearGradient colors={gradient} style={styles.card}>
-          <View style={styles.cardHeader}>
-            <View style={styles.iconContainer}>
-              <MaterialIcons name={icon} size={26} color={COLORS.surface} />
-            </View>
-            <MaterialIcons name="chevron-right" size={22} color="rgba(255,255,255,0.7)" />
-          </View>
-          <View style={styles.cardContent}>
-            <Text style={styles.cardValue}>{value}</Text>
-            <Text style={styles.cardTitle}>{title}</Text>
-          </View>
-        </LinearGradient>
-      </TouchableOpacity>
-    </FadeInRight>
-  );
+  const statCards = [
+    { title: 'Dioceses', value: getCount('dioceses'), icon: 'account-balance', gradient: ['#0284c7', '#0369a1'] },
+    { title: 'Deaneries', value: getCount('deaneries'), icon: 'business', gradient: ['#2563eb', '#1d4ed8'] },
+    { title: 'Parishes', value: getCount('parishes'), icon: 'church', gradient: ['#0d9488', '#0f766e'] },
+    { title: 'Families', value: getCount('families'), icon: 'family-restroom', gradient: ['#4f46e5', '#3730a3'] },
+    { title: 'Parishioners', value: getCount('members') !== '0' ? getCount('members') : getCount('parishioners'), icon: 'groups', gradient: ['#059669', '#047857'] },
+    { title: 'Commissions', value: '18', icon: 'extension', gradient: ['#7c3aed', '#6d28d9'] },
+  ];
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={GRADIENTS.primary} style={styles.headerBackground} />
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.surface} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />
+        }
       >
-        <FadeInUp duration={600} style={styles.header}>
+        {/* Streamlined Top User Header */}
+        <View style={styles.header}>
           <View style={styles.headerTextContainer}>
-            <Text style={styles.greeting}>Hello, {user?.username || 'User'}</Text>
+            <Text style={styles.greeting}>Welcome, {user?.name || user?.username || 'User'}</Text>
             <View style={styles.roleChip}>
-              <MaterialIcons name="verified-user" size={14} color="#FEF3C7" style={{ marginRight: 4 }} />
+              <MaterialIcons name="verified-user" size={13} color={COLORS.primary} style={{ marginRight: 4 }} />
               <Text style={styles.roleChipText}>{getScopeDescription()}</Text>
             </View>
           </View>
           <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
-            <MaterialIcons name="logout" size={22} color={COLORS.surface} />
+            <MaterialIcons name="logout" size={20} color={COLORS.text} />
           </TouchableOpacity>
-        </FadeInUp>
-
-        <View style={styles.contentSection}>
-          <Text style={styles.sectionTitle}>Overview</Text>
-          <View style={styles.grid}>
-            <StatCard index={0} title="Dioceses" value={getCount('dioceses')} icon="account-balance" gradient={GRADIENTS.primary} />
-            <StatCard index={1} title="Deaneries" value={getCount('deaneries')} icon="business" gradient={GRADIENTS.secondary} />
-            <StatCard index={2} title="Parishes" value={getCount('parishes')} icon="church" gradient={['#06B6D4', '#3B82F6']} />
-            <StatCard index={3} title="Members" value={getCount('members')} icon="groups" gradient={['#10B981', '#059669']} />
-          </View>
-
-          {/* Announcements & Pastoral Circulars */}
-          <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>Pastoral Circulars & Notices</Text>
-            <MaterialIcons name="campaign" size={24} color={COLORS.primary} />
-          </View>
-          {circulars.length === 0 ? (
-            <View style={styles.emptyCard}>
-              <Text style={styles.emptyCardText}>No announcements posted yet.</Text>
-            </View>
-          ) : (
-            circulars.slice(0, 3).map((c) => (
-              <View key={c.id} style={styles.noticeCard}>
-                <View style={styles.noticeTop}>
-                  <View style={[styles.priorityBadge, c.priority === 'Important' ? styles.priorityImportant : styles.priorityNormal]}>
-                    <Text style={styles.priorityText}>{c.priority || 'Notice'}</Text>
-                  </View>
-                  <Text style={styles.noticeDate}>{c.publish_date}</Text>
-                </View>
-                <Text style={styles.noticeTitle}>{c.title}</Text>
-                <Text style={styles.noticeContent} numberOfLines={3}>{c.content}</Text>
-                <Text style={styles.noticeAuthor}>— {c.author || 'Chancery Office'}</Text>
-              </View>
-            ))
-          )}
-
-          {/* Upcoming Events & Masses */}
-          <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>Upcoming Events & Masses</Text>
-            <MaterialIcons name="event" size={24} color={COLORS.primary} />
-          </View>
-          {events.length === 0 ? (
-            <View style={styles.emptyCard}>
-              <Text style={styles.emptyCardText}>No upcoming events scheduled.</Text>
-            </View>
-          ) : (
-            events.slice(0, 3).map((e) => (
-              <View key={e.id} style={styles.eventCard}>
-                <View style={styles.eventDateBox}>
-                  <MaterialIcons name="schedule" size={20} color={COLORS.primary} />
-                  <Text style={styles.eventType}>{e.event_type || 'Event'}</Text>
-                </View>
-                <View style={styles.eventContent}>
-                  <Text style={styles.eventTitle}>{e.title}</Text>
-                  <Text style={styles.eventTime}>{e.start_time} {e.location ? `• ${e.location}` : ''}</Text>
-                  {e.parish_name ? <Text style={styles.eventParish}>{e.parish_name}</Text> : null}
-                </View>
-              </View>
-            ))
-          )}
         </View>
+
+        {/* Stat Cards Grid */}
+        <View style={styles.grid}>
+          {statCards.map((sc, idx) => (
+            <View key={idx} style={styles.cardWrapper}>
+              <LinearGradient colors={sc.gradient} start={{x: 0, y: 0}} end={{x: 1, y: 1}} style={styles.card}>
+                <View style={styles.cardHeader}>
+                  <View style={styles.iconContainer}>
+                    <MaterialIcons name={sc.icon} size={22} color="#ffffff" />
+                  </View>
+                  <Text style={styles.cardValue}>{sc.value}</Text>
+                </View>
+                <Text style={styles.cardTitle}>{sc.title}</Text>
+              </LinearGradient>
+            </View>
+          ))}
+        </View>
+
+        {/* Diocesan Programs & Competitions (18 Commissions) */}
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionTitle}>Diocesan Programs & Competitions</Text>
+          <MaterialIcons name="emoji-events" size={22} color={COLORS.primary} />
+        </View>
+        {programs.length === 0 ? (
+          <View style={styles.emptyCard}>
+            <Text style={styles.emptyCardText}>No diocesan programs currently active.</Text>
+          </View>
+        ) : (
+          programs.slice(0, 3).map((p) => (
+            <View key={p.id} style={styles.programCard}>
+              <View style={styles.programHeader}>
+                <View style={styles.commissionTag}>
+                  <Text style={styles.commissionTagText}>{p.commission_name || 'Pastoral Commission'}</Text>
+                </View>
+                <Text style={styles.programLevel}>{p.level ? `${p.level.toUpperCase()} LEVEL` : 'DIOCESAN'}</Text>
+              </View>
+              <Text style={styles.programTitle}>{p.title}</Text>
+              <Text style={styles.programDesc} numberOfLines={2}>{p.description}</Text>
+              <View style={styles.programMetaRow}>
+                <MaterialIcons name="event" size={14} color={COLORS.primary} style={{ marginRight: 4 }} />
+                <Text style={styles.programDate}>{p.start_date || 'Ongoing'} {p.venue ? `• ${p.venue}` : ''}</Text>
+              </View>
+            </View>
+          ))
+        )}
+
+        {/* Announcements & Pastoral Circulars */}
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionTitle}>Pastoral Circulars & Notices</Text>
+          <MaterialIcons name="campaign" size={22} color={COLORS.primary} />
+        </View>
+        {circulars.length === 0 ? (
+          <View style={styles.emptyCard}>
+            <Text style={styles.emptyCardText}>No announcements posted yet.</Text>
+          </View>
+        ) : (
+          circulars.slice(0, 3).map((c) => (
+            <View key={c.id} style={styles.noticeCard}>
+              <View style={styles.noticeTop}>
+                <View style={[styles.priorityBadge, c.priority === 'Important' ? styles.priorityImportant : styles.priorityNormal]}>
+                  <Text style={styles.priorityText}>{c.priority || 'Notice'}</Text>
+                </View>
+                <Text style={styles.noticeDate}>{c.publish_date}</Text>
+              </View>
+              <Text style={styles.noticeTitle}>{c.title}</Text>
+              <Text style={styles.noticeContent} numberOfLines={3}>{c.content}</Text>
+              <Text style={styles.noticeAuthor}>— {c.author || 'Chancery Office'}</Text>
+            </View>
+          ))
+        )}
+
+        {/* Upcoming Events & Masses */}
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionTitle}>Upcoming Events & Masses</Text>
+          <MaterialIcons name="event" size={22} color={COLORS.primary} />
+        </View>
+        {events.length === 0 ? (
+          <View style={styles.emptyCard}>
+            <Text style={styles.emptyCardText}>No upcoming events scheduled.</Text>
+          </View>
+        ) : (
+          events.slice(0, 3).map((e) => (
+            <View key={e.id} style={styles.eventCard}>
+              <View style={styles.eventDateBox}>
+                <MaterialIcons name="schedule" size={18} color={COLORS.primary} />
+                <Text style={styles.eventType}>{e.event_type || 'Event'}</Text>
+              </View>
+              <View style={styles.eventContent}>
+                <Text style={styles.eventTitle}>{e.title}</Text>
+                <Text style={styles.eventTime}>{e.start_time} {e.location ? `• ${e.location}` : ''}</Text>
+                {e.parish_name ? <Text style={styles.eventParish}>{e.parish_name}</Text> : null}
+              </View>
+            </View>
+          ))
+        )}
       </ScrollView>
     </View>
   );
@@ -166,15 +194,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  headerBackground: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 280,
-    borderBottomLeftRadius: SIZES.radius.xl,
-    borderBottomRightRadius: SIZES.radius.xl,
-  },
   scrollContent: {
     paddingBottom: 40,
   },
@@ -182,128 +201,184 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 24,
-    paddingTop: 55,
-    marginBottom: 10,
+    paddingHorizontal: 18,
+    paddingTop: 45,
+    paddingBottom: 14,
+    backgroundColor: COLORS.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
   },
   headerTextContainer: {
     flex: 1,
   },
   greeting: {
-    fontSize: SIZES.xxl,
+    fontSize: SIZES.xl,
     fontWeight: '800',
-    color: COLORS.surface,
+    color: '#ffffff',
   },
   roleChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.22)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    backgroundColor: 'rgba(56, 189, 248, 0.12)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
     alignSelf: 'flex-start',
-    marginTop: 6,
+    marginTop: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(56, 189, 248, 0.25)',
   },
   roleChipText: {
-    fontSize: SIZES.xs,
-    color: COLORS.surface,
+    fontSize: 11,
+    color: COLORS.primary,
     fontWeight: '700',
   },
   logoutBtn: {
-    padding: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    padding: 9,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
     borderRadius: SIZES.radius.md,
-  },
-  contentSection: {
-    backgroundColor: COLORS.background,
-    borderTopLeftRadius: SIZES.radius.xl,
-    borderTopRightRadius: SIZES.radius.xl,
-    paddingTop: 20,
-    flex: 1,
-  },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginHorizontal: 20,
-    marginTop: 20,
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontSize: SIZES.lg,
-    fontWeight: '700',
-    color: COLORS.text,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
+    paddingTop: 14,
     justifyContent: 'space-between',
   },
   cardWrapper: {
     width: '48%',
-    marginBottom: 14,
-    ...SHADOWS.medium,
+    marginBottom: 10,
+    ...SHADOWS.small,
   },
   card: {
-    borderRadius: SIZES.radius.lg,
-    padding: 16,
-    height: 125,
+    borderRadius: 14,
+    padding: 12,
+    height: 95,
     justifyContent: 'space-between',
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
   },
   iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: SIZES.radius.md,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  cardContent: {
-    marginTop: 'auto',
-  },
-  cardTitle: {
-    fontSize: SIZES.xs,
-    color: 'rgba(255, 255, 255, 0.9)',
-    fontWeight: '600',
-    marginTop: 2,
-  },
   cardValue: {
     fontSize: SIZES.xl,
-    fontWeight: 'bold',
-    color: COLORS.surface,
+    fontWeight: '800',
+    color: '#ffffff',
+  },
+  cardTitle: {
+    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginHorizontal: 16,
+    marginTop: 18,
+    marginBottom: 8,
+  },
+  sectionTitle: {
+    fontSize: SIZES.md,
+    fontWeight: '700',
+    color: COLORS.text,
+    letterSpacing: 0.2,
+  },
+  programCard: {
+    backgroundColor: COLORS.surface,
+    marginHorizontal: 14,
+    marginBottom: 8,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.primary,
+    ...SHADOWS.small,
+  },
+  programHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  commissionTag: {
+    backgroundColor: 'rgba(56, 189, 248, 0.12)',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  commissionTagText: {
+    color: COLORS.primary,
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  programLevel: {
+    fontSize: 10,
+    color: COLORS.textLight,
+    fontWeight: '600',
+  },
+  programTitle: {
+    fontSize: SIZES.sm,
+    fontWeight: '700',
+    color: COLORS.text,
+    marginBottom: 3,
+  },
+  programDesc: {
+    fontSize: 11,
+    color: COLORS.textLight,
+    lineHeight: 16,
+    marginBottom: 6,
+  },
+  programMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  programDate: {
+    fontSize: 11,
+    color: COLORS.textLight,
   },
   noticeCard: {
     backgroundColor: COLORS.surface,
-    marginHorizontal: 16,
-    marginBottom: 12,
-    padding: 16,
-    borderRadius: 14,
-    ...SHADOWS.small,
+    marginHorizontal: 14,
+    marginBottom: 8,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     borderLeftWidth: 4,
-    borderLeftColor: COLORS.primary,
+    borderLeftColor: COLORS.secondary,
+    ...SHADOWS.small,
   },
   noticeTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   priorityBadge: {
-    paddingHorizontal: 8,
+    paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 6,
   },
   priorityImportant: {
-    backgroundColor: '#FEE2E2',
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
   },
   priorityNormal: {
-    backgroundColor: '#E0E7FF',
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
   },
   priorityText: {
     fontSize: 10,
@@ -315,44 +390,46 @@ const styles = StyleSheet.create({
     color: COLORS.textLight,
   },
   noticeTitle: {
-    fontSize: SIZES.md,
+    fontSize: SIZES.sm,
     fontWeight: '700',
     color: COLORS.text,
-    marginBottom: 4,
+    marginBottom: 3,
   },
   noticeContent: {
-    fontSize: SIZES.sm,
+    fontSize: 11,
     color: COLORS.textLight,
-    lineHeight: 18,
+    lineHeight: 16,
   },
   noticeAuthor: {
-    fontSize: 11,
+    fontSize: 10,
     fontStyle: 'italic',
     color: COLORS.textLight,
-    marginTop: 6,
+    marginTop: 4,
     textAlign: 'right',
   },
   eventCard: {
     flexDirection: 'row',
     backgroundColor: COLORS.surface,
-    marginHorizontal: 16,
-    marginBottom: 10,
-    padding: 14,
+    marginHorizontal: 14,
+    marginBottom: 8,
+    padding: 10,
     borderRadius: 12,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
     ...SHADOWS.small,
   },
   eventDateBox: {
-    width: 60,
+    width: 56,
     alignItems: 'center',
     justifyContent: 'center',
     borderRightWidth: 1,
     borderRightColor: COLORS.border,
-    paddingRight: 10,
-    marginRight: 12,
+    paddingRight: 8,
+    marginRight: 10,
   },
   eventType: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '700',
     color: COLORS.primary,
     marginTop: 2,
@@ -362,30 +439,32 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   eventTitle: {
-    fontSize: SIZES.md,
+    fontSize: SIZES.sm,
     fontWeight: '700',
     color: COLORS.text,
   },
   eventTime: {
-    fontSize: SIZES.xs,
+    fontSize: 10,
     color: COLORS.textLight,
     marginTop: 2,
   },
   eventParish: {
-    fontSize: 11,
+    fontSize: 10,
     color: COLORS.primary,
     fontWeight: '600',
     marginTop: 2,
   },
   emptyCard: {
     backgroundColor: COLORS.surface,
-    marginHorizontal: 16,
-    padding: 20,
+    marginHorizontal: 14,
+    padding: 14,
     borderRadius: 12,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   emptyCardText: {
     color: COLORS.textLight,
-    fontSize: SIZES.sm,
+    fontSize: 11,
   }
 });
