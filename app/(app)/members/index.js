@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import apiClient from '../../../src/api/client';
+import * as WebBrowser from 'expo-web-browser';
+import * as SecureStore from 'expo-secure-store';
+import apiClient, { BASE_URL } from '../../../src/api/client';
 import { COLORS, SIZES, SHADOWS } from '../../../src/constants/theme';
 import { MaterialIcons } from '@expo/vector-icons';
 
@@ -14,7 +16,7 @@ export default function MembersScreen() {
   const fetchMembers = async (searchQuery = '') => {
     setLoading(true);
     try {
-      const url = searchQuery ? `/api/members?search=${searchQuery}` : '/api/members';
+      const url = searchQuery ? `/api/members?search=${encodeURIComponent(searchQuery)}` : '/api/members';
       const response = await apiClient.get(url);
       setMembers(response.data);
     } catch (error) {
@@ -32,6 +34,18 @@ export default function MembersScreen() {
     fetchMembers(search);
   };
 
+  const handleExport = async (format = 'excel') => {
+    try {
+      const token = await SecureStore.getItemAsync('userToken');
+      const exportUrl = `${BASE_URL}/api/export/members?format=${format}`;
+      await WebBrowser.openBrowserAsync(exportUrl, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+    } catch (e) {
+      Alert.alert('Export', 'Opening export download in browser...');
+    }
+  };
+
   const renderItem = ({ item }) => (
     <TouchableOpacity 
       style={styles.card}
@@ -42,7 +56,12 @@ export default function MembersScreen() {
       </View>
       <View style={styles.cardContent}>
         <Text style={styles.cardTitle}>{item.first_name} {item.last_name}</Text>
-        <Text style={styles.cardSubtitle}>{item.role || 'Laity'}</Text>
+        <View style={styles.metaRow}>
+          <Text style={styles.badgeText}>{item.role || 'Laity'}</Text>
+          {item.parish_name ? (
+            <Text style={styles.parishText} numberOfLines={1}>• {item.parish_name}</Text>
+          ) : null}
+        </View>
       </View>
       <MaterialIcons name="chevron-right" size={24} color={COLORS.textLight} />
     </TouchableOpacity>
@@ -50,16 +69,22 @@ export default function MembersScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.searchContainer}>
-        <MaterialIcons name="search" size={24} color={COLORS.textLight} />
-        <TextInput 
-          style={styles.searchInput} 
-          placeholder="Search members..." 
-          value={search}
-          onChangeText={setSearch}
-          onSubmitEditing={handleSearch}
-          returnKeyType="search"
-        />
+      <View style={styles.topBar}>
+        <View style={styles.searchContainer}>
+          <MaterialIcons name="search" size={22} color={COLORS.textLight} />
+          <TextInput 
+            style={styles.searchInput} 
+            placeholder="Search parishioners..." 
+            value={search}
+            onChangeText={setSearch}
+            onSubmitEditing={handleSearch}
+            returnKeyType="search"
+          />
+        </View>
+        <TouchableOpacity style={styles.exportBtn} onPress={() => handleExport('excel')}>
+          <MaterialIcons name="file-download" size={20} color={COLORS.surface} />
+          <Text style={styles.exportBtnText}>Excel</Text>
+        </TouchableOpacity>
       </View>
 
       {loading ? (
@@ -73,7 +98,7 @@ export default function MembersScreen() {
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
-            <Text style={styles.emptyText}>No Members Found</Text>
+            <Text style={styles.emptyText}>No Members Found within your scope</Text>
           }
         />
       )}
@@ -91,14 +116,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 6,
+  },
   searchContainer: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.surface,
-    margin: 16,
     paddingHorizontal: 12,
     borderRadius: 12,
-    height: 50,
+    height: 46,
     ...SHADOWS.small,
   },
   searchInput: {
@@ -106,45 +138,73 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: SIZES.md,
   },
+  exportBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 12,
+    marginLeft: 10,
+    ...SHADOWS.small,
+  },
+  exportBtnText: {
+    color: COLORS.surface,
+    fontWeight: '700',
+    fontSize: SIZES.xs,
+    marginLeft: 4,
+  },
   listContent: {
     paddingHorizontal: 16,
+    paddingTop: 8,
     paddingBottom: 20,
   },
   card: {
     backgroundColor: COLORS.surface,
-    padding: 16,
+    padding: 14,
     borderRadius: 12,
-    marginBottom: 12,
+    marginBottom: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     ...SHADOWS.small,
   },
   iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: COLORS.primary + '15',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: 14,
   },
   cardContent: {
     flex: 1,
   },
   cardTitle: {
-    fontSize: SIZES.lg,
+    fontSize: SIZES.md,
     fontWeight: 'bold',
     color: COLORS.text,
-    marginBottom: 4,
+    marginBottom: 2,
   },
-  cardSubtitle: {
-    fontSize: SIZES.sm,
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  badgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.primary,
+  },
+  parishText: {
+    fontSize: 11,
     color: COLORS.textLight,
+    marginLeft: 6,
+    flex: 1,
   },
   emptyText: {
     textAlign: 'center',
-    marginTop: 20,
+    marginTop: 30,
     color: COLORS.textLight,
   },
 });

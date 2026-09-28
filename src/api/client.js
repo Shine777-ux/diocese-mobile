@@ -2,8 +2,7 @@ import axios from 'axios';
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 
-// Use 10.0.2.2 for Android Emulator, localhost for iOS simulator / web
-const BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000';
+const BASE_URL = 'http://192.168.18.238:8000';
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
@@ -31,3 +30,5 @@ apiClient.interceptors.request.use(
 );
 
 export default apiClient;
+
+export { BASE_URL };

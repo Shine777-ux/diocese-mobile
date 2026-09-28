@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import apiClient from '../../../src/api/client';
-import { COLORS, SIZES, SHADOWS } from '../../../src/constants/theme';
+import { COLORS, SIZES, SHADOWS, GRADIENTS } from '../../../src/constants/theme';
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { FadeInDown, FadeInRight } from '../../../src/components/FadeInView';
 
 export default function DioceseDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -49,15 +51,32 @@ export default function DioceseDetailScreen() {
     );
   }
 
+  const renderDeanery = ({ item, index }) => (
+    <FadeInRight delay={index * 100} duration={500}>
+      <TouchableOpacity activeOpacity={0.8} style={styles.card}>
+        <View style={styles.iconContainer}>
+          <MaterialIcons name="business" size={24} color={COLORS.secondary} />
+        </View>
+        <View style={styles.cardContent}>
+          <Text style={styles.cardTitle}>{item.name}</Text>
+          <Text style={styles.cardSubtitle}>Dean: {item.dean || 'N/A'}</Text>
+        </View>
+        <MaterialIcons name="chevron-right" size={24} color={COLORS.textLight} />
+      </TouchableOpacity>
+    </FadeInRight>
+  );
+
   return (
     <View style={styles.container}>
-      <View style={styles.headerCard}>
-        <Text style={styles.title}>{diocese.name}</Text>
-        <Text style={styles.detailText}>Bishop: {diocese.bishop || 'N/A'}</Text>
-        <Text style={styles.detailText}>Founded: {diocese.founded || 'N/A'}</Text>
-        <Text style={styles.detailText}>{diocese.email} | {diocese.phone}</Text>
-        <Text style={styles.detailText}>{diocese.address}</Text>
-      </View>
+      <FadeInDown duration={600}>
+        <LinearGradient colors={GRADIENTS.primary} style={styles.headerCard}>
+          <Text style={styles.title}>{diocese.name}</Text>
+          <Text style={styles.detailText}>Bishop: {diocese.bishop || 'N/A'}</Text>
+          <Text style={styles.detailText}>Founded: {diocese.founded || 'N/A'}</Text>
+          <Text style={styles.detailText}>{diocese.email} | {diocese.phone}</Text>
+          <Text style={styles.detailText}>{diocese.address}</Text>
+        </LinearGradient>
+      </FadeInDown>
 
       <Text style={styles.sectionTitle}>Deaneries in this Diocese</Text>
       
@@ -65,17 +84,7 @@ export default function DioceseDetailScreen() {
         data={deaneries}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContent}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <View style={styles.iconContainer}>
-              <MaterialIcons name="business" size={24} color={COLORS.secondary} />
-            </View>
-            <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>{item.name}</Text>
-              <Text style={styles.cardSubtitle}>Dean: {item.dean || 'N/A'}</Text>
-            </View>
-          </View>
-        )}
+        renderItem={renderDeanery}
         ListEmptyComponent={
           <Text style={styles.emptyText}>No Deaneries Found</Text>
         }
@@ -96,48 +105,50 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   headerCard: {
-    backgroundColor: COLORS.primary,
-    padding: 24,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    padding: 32,
+    paddingTop: 60,
+    borderBottomLeftRadius: SIZES.radius.xl,
+    borderBottomRightRadius: SIZES.radius.xl,
     ...SHADOWS.medium,
   },
   title: {
-    fontSize: SIZES.xxl,
-    fontWeight: 'bold',
+    fontSize: SIZES.xxxl,
+    fontWeight: '800',
     color: COLORS.surface,
-    marginBottom: 8,
+    marginBottom: 12,
+    letterSpacing: 0.5,
   },
   detailText: {
-    color: COLORS.surface,
-    opacity: 0.9,
+    color: 'rgba(255, 255, 255, 0.9)',
     fontSize: SIZES.md,
-    marginBottom: 4,
+    marginBottom: 6,
+    fontWeight: '500',
   },
   sectionTitle: {
-    fontSize: SIZES.lg,
-    fontWeight: 'bold',
+    fontSize: SIZES.xl,
+    fontWeight: '700',
     color: COLORS.text,
-    margin: 16,
+    margin: 24,
+    marginBottom: 16,
   },
   listContent: {
     paddingHorizontal: 16,
-    paddingBottom: 20,
+    paddingBottom: 40,
   },
   card: {
     backgroundColor: COLORS.surface,
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
+    padding: 20,
+    borderRadius: SIZES.radius.md,
+    marginBottom: 16,
     flexDirection: 'row',
     alignItems: 'center',
     ...SHADOWS.small,
   },
   iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: COLORS.secondary + '20',
+    width: 56,
+    height: 56,
+    borderRadius: SIZES.radius.sm,
+    backgroundColor: COLORS.background,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -146,7 +157,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   cardTitle: {
-    fontSize: SIZES.md,
+    fontSize: SIZES.lg,
     fontWeight: 'bold',
     color: COLORS.text,
   },
@@ -154,10 +165,12 @@ const styles = StyleSheet.create({
     fontSize: SIZES.sm,
     color: COLORS.textLight,
     marginTop: 4,
+    fontWeight: '500',
   },
   emptyText: {
     textAlign: 'center',
     color: COLORS.textLight,
-    marginTop: 20,
+    marginTop: 40,
+    fontSize: SIZES.md,
   }
 });

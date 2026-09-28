@@ -1,8 +1,13 @@
 import { Tabs } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS } from '../../src/constants/theme';
+import { useAuth } from '../../src/context/AuthContext';
 
 export default function AppLayout() {
+  const { user } = useAuth();
+  const role = (user?.role || '').toLowerCase();
+  const canViewDiocese = ['admin', 'administrator', 'bishop'].includes(role);
+
   return (
     <Tabs
       screenOptions={{
@@ -32,6 +37,7 @@ export default function AppLayout() {
         options={{
           title: 'Dioceses',
           headerShown: false,
+          href: canViewDiocese ? undefined : null,
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="account-balance" size={size} color={color} />
           ),

@@ -3,7 +3,7 @@
  * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
  */
 
-import '@/global.css';
+
 
 import { Platform } from 'react-native';
 
@@ -63,3 +63,69 @@ export const Spacing = {
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
 export const MaxContentWidth = 800;
+
+export const COLORS = {
+  primary: '#5E2BFF', // Deep vibrant Indigo/Purple
+  primaryLight: '#8A58FF',
+  primaryDark: '#3A14B8',
+  
+  secondary: '#FFB800', // Premium Gold/Amber
+  accent: '#00F0FF', // Cyan accent
+  
+  background: '#F4F5F9', // Premium light off-white
+  surface: '#FFFFFF',
+  surfaceLight: 'rgba(255, 255, 255, 0.7)', // For glassmorphism
+  
+  text: '#1F2937', // Deep gray
+  textLight: '#9CA3AF', 
+  
+  border: '#E5E7EB',
+  error: '#FF4C4C',
+  success: '#10B981',
+};
+
+export const GRADIENTS = {
+  primary: ['#5E2BFF', '#8A58FF'],
+  secondary: ['#FFB800', '#FFD15C'],
+  background: ['#F4F5F9', '#E5E7EB'],
+};
+
+export const SIZES = {
+  xs: 12,
+  sm: 14,
+  md: 16,
+  lg: 18,
+  xl: 22,
+  xxl: 28,
+  xxxl: 36,
+  radius: {
+    sm: 8,
+    md: 16,
+    lg: 24,
+    xl: 32,
+  }
+};
+
+export const SHADOWS = {
+  small: {
+    shadowColor: COLORS.primaryDark,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  medium: {
+    shadowColor: COLORS.primaryDark,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    elevation: 8,
+  },
+  large: {
+    shadowColor: COLORS.primaryDark,
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.12,
+    shadowRadius: 30,
+    elevation: 15,
+  }
+};

@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import apiClient from '../../../src/api/client';
-import { COLORS, SIZES, SHADOWS } from '../../../src/constants/theme';
+import { COLORS, SIZES, SHADOWS, GRADIENTS } from '../../../src/constants/theme';
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { FadeInDown, FadeInUp } from '../../../src/components/FadeInView';
 
 export default function ParishDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -45,34 +47,40 @@ export default function ParishDetailScreen() {
 
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.headerCard}>
-        <MaterialIcons name="church" size={48} color={COLORS.surface} style={styles.icon} />
-        <Text style={styles.title}>{parish.name}</Text>
-        <Text style={styles.detailText}>Pastor: {parish.pastor || 'N/A'}</Text>
-        {parish.assistant_pastor ? (
-          <Text style={styles.detailText}>Asst. Pastor: {parish.assistant_pastor}</Text>
-        ) : null}
-        <Text style={styles.detailText}>{parish.email} | {parish.phone}</Text>
-        <Text style={styles.detailText}>{parish.address}</Text>
-      </View>
+      <FadeInDown duration={600}>
+        <LinearGradient colors={GRADIENTS.primary} style={styles.headerCard}>
+          <View style={styles.iconContainer}>
+            <MaterialIcons name="church" size={48} color={COLORS.primary} />
+          </View>
+          <Text style={styles.title}>{parish.name}</Text>
+          <Text style={styles.detailText}>Pastor: {parish.pastor || 'N/A'}</Text>
+          {parish.assistant_pastor ? (
+            <Text style={styles.detailText}>Asst. Pastor: {parish.assistant_pastor}</Text>
+          ) : null}
+          <Text style={styles.detailText}>{parish.email} | {parish.phone}</Text>
+          <Text style={styles.detailText}>{parish.address}</Text>
+        </LinearGradient>
+      </FadeInDown>
 
-      <Text style={styles.sectionTitle}>Overview</Text>
-      
-      <View style={styles.statsRow}>
-        <View style={styles.statBox}>
-          <Text style={styles.statValue}>{parish.wards?.length || 0}</Text>
-          <Text style={styles.statLabel}>Wards</Text>
+      <FadeInUp duration={600} delay={200}>
+        <Text style={styles.sectionTitle}>Overview</Text>
+        
+        <View style={styles.statsRow}>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>{parish.wards?.length || 0}</Text>
+            <Text style={styles.statLabel}>Wards</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>{parish.groups?.length || 0}</Text>
+            <Text style={styles.statLabel}>Groups</Text>
+          </View>
         </View>
-        <View style={styles.statBox}>
-          <Text style={styles.statValue}>{parish.groups?.length || 0}</Text>
-          <Text style={styles.statLabel}>Groups</Text>
-        </View>
-      </View>
 
-      <View style={styles.infoBox}>
-        <MaterialIcons name="info-outline" size={24} color={COLORS.primary} style={{marginRight: 8}}/>
-        <Text style={styles.infoText}>Families and Members details will be available in Phase 3.</Text>
-      </View>
+        <View style={styles.infoBox}>
+          <MaterialIcons name="info-outline" size={24} color={COLORS.primary} style={{marginRight: 12}}/>
+          <Text style={styles.infoText}>Families and Members details will be available in Phase 3.</Text>
+        </View>
+      </FadeInUp>
       
     </ScrollView>
   );
@@ -90,72 +98,88 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   headerCard: {
-    backgroundColor: COLORS.accent,
-    padding: 24,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    ...SHADOWS.medium,
+    padding: 32,
+    borderBottomLeftRadius: SIZES.radius.xl,
+    borderBottomRightRadius: SIZES.radius.xl,
     alignItems: 'center',
+    ...SHADOWS.medium,
+    paddingTop: 60, // approximate safe area top
   },
-  icon: {
-    marginBottom: 12,
+  iconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: COLORS.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    ...SHADOWS.small,
   },
   title: {
     fontSize: SIZES.xxl,
-    fontWeight: 'bold',
+    fontWeight: '800',
     color: COLORS.surface,
-    marginBottom: 8,
+    marginBottom: 12,
     textAlign: 'center',
+    letterSpacing: 0.5,
   },
   detailText: {
-    color: COLORS.surface,
-    opacity: 0.9,
+    color: 'rgba(255, 255, 255, 0.9)',
     fontSize: SIZES.md,
-    marginBottom: 4,
+    marginBottom: 6,
     textAlign: 'center',
+    fontWeight: '500',
   },
   sectionTitle: {
-    fontSize: SIZES.lg,
-    fontWeight: 'bold',
+    fontSize: SIZES.xl,
+    fontWeight: '700',
     color: COLORS.text,
-    margin: 16,
+    margin: 24,
+    marginBottom: 16,
   },
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     paddingHorizontal: 16,
-    marginBottom: 20,
+    marginBottom: 24,
   },
   statBox: {
     backgroundColor: COLORS.surface,
     width: '45%',
-    padding: 16,
-    borderRadius: 16,
+    padding: 24,
+    borderRadius: SIZES.radius.lg,
     alignItems: 'center',
-    ...SHADOWS.small,
+    ...SHADOWS.medium,
   },
   statValue: {
     fontSize: SIZES.xxxl,
-    fontWeight: 'bold',
+    fontWeight: '800',
     color: COLORS.primary,
   },
   statLabel: {
     fontSize: SIZES.sm,
     color: COLORS.textLight,
-    marginTop: 4,
+    marginTop: 8,
+    fontWeight: '600',
+    textTransform: 'uppercase',
   },
   infoBox: {
     flexDirection: 'row',
-    marginHorizontal: 16,
-    padding: 16,
-    backgroundColor: COLORS.primary + '10',
-    borderRadius: 12,
+    marginHorizontal: 24,
+    padding: 20,
+    backgroundColor: COLORS.surface,
+    borderRadius: SIZES.radius.md,
     alignItems: 'center',
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.primary,
+    ...SHADOWS.small,
   },
   infoText: {
     flex: 1,
-    color: COLORS.primaryDark,
+    color: COLORS.text,
     fontSize: SIZES.sm,
+    fontWeight: '500',
+    lineHeight: 20,
   },
   emptyText: {
     textAlign: 'center',
